@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,13 @@ class TodoListScreen extends StatefulWidget {
 }
 
 class TodoListState extends State<TodoListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final provider = Provider.of<TodoProvider>(context, listen: false);
+    provider.fetchTodos();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,7 +92,13 @@ class TodoListState extends State<TodoListScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () {
-                    // 這裡添加刪除Todo的邏輯
+                    inspect(todo);
+                    provider.deleteTodoById(todo.id!).then((_) {
+                      Provider.of<TodoProvider>(context, listen: false)
+                          .fetchTodos();
+                    }).catchError((error) {
+                      // 處理錯誤情況，例如顯示錯誤提示
+                    });
                   },
                 ),
               );
@@ -142,7 +157,8 @@ class TodoListState extends State<TodoListScreen> {
                   Provider.of<TodoProvider>(context, listen: false)
                       .addTodo(newTodo)
                       .then((_) {
-                    // 可以在這裡處理成功添加後的邏輯，例如顯示提示或更新界面
+                    Provider.of<TodoProvider>(context, listen: true)
+                        .fetchTodos();
                   }).catchError((error) {
                     // 處理錯誤情況，例如顯示錯誤提示
                   });

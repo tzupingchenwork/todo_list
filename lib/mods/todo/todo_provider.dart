@@ -17,7 +17,7 @@ class Todo {
 
   factory Todo.fromJson(Map<String, dynamic> json) {
     return Todo(
-      id: json['id'],
+      id: json['_id'],
       title: json['title'],
       content: json['content'],
       state: json['state'],
@@ -38,6 +38,7 @@ class TodoProvider with ChangeNotifier {
 
   Future<void> fetchTodos() async {
     final response = await http.get(Uri.parse('http://localhost:3000/todos'));
+
     if (response.statusCode == 200) {
       var data = json.decode(response.body) as List;
       _todos = data.map<Todo>((json) => Todo.fromJson(json)).toList();
@@ -55,9 +56,8 @@ class TodoProvider with ChangeNotifier {
       },
       body: jsonEncode(todo.toJson()),
     );
-    inspect(response);
-    bool _isOk(int statusCode) => 200 <= statusCode && statusCode < 300;
-    if (_isOk(response.statusCode)) {
+    bool isOk(int statusCode) => 200 <= statusCode && statusCode < 300;
+    if (isOk(response.statusCode)) {
       _todos.add(todo);
 
       notifyListeners();
@@ -67,4 +67,16 @@ class TodoProvider with ChangeNotifier {
   }
 
   // 這裡可以添加刪除和更新方法
+  Future<void> deleteTodoById(String id) async {
+    inspect(id);
+    final response =
+        await http.delete(Uri.parse('http://localhost:3000/todos/$id'));
+    bool isOk(int statusCode) => 200 <= statusCode && statusCode < 300;
+    if (isOk(response.statusCode)) {
+      _todos.removeWhere((todo) => todo.id == id);
+      notifyListeners();
+    } else {
+      throw Exception('Failed to delete todo');
+    }
+  }
 }
