@@ -89,17 +89,27 @@ class TodoListState extends State<TodoListScreen> {
               return ListTile(
                 title: Text(todo.title),
                 subtitle: Text(todo.content),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    inspect(todo);
-                    provider.deleteTodoById(todo.id!).then((_) {
-                      Provider.of<TodoProvider>(context, listen: false)
-                          .fetchTodos();
-                    }).catchError((error) {
-                      // 處理錯誤情況，例如顯示錯誤提示
-                    });
-                  },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        _showEditTodoDialog(context, todo);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        provider.deleteTodoById(todo.id!).then((_) {
+                          Provider.of<TodoProvider>(context, listen: false)
+                              .fetchTodos();
+                        }).catchError((error) {
+                          // 處理錯誤情況，例如顯示錯誤提示
+                        });
+                      },
+                    ),
+                  ],
                 ),
               );
             },
@@ -164,6 +174,70 @@ class TodoListState extends State<TodoListScreen> {
                   });
                 }
 
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditTodoDialog(BuildContext context, Todo todo) {
+    final TextEditingController titleController =
+        TextEditingController(text: todo.title);
+    final TextEditingController contentController =
+        TextEditingController(text: todo.content);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Todo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(labelText: 'Content'),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () {
+                final String updatedTitle = titleController.text;
+                final String updatedContent = contentController.text;
+                inspect(todo);
+
+                if (updatedTitle.isNotEmpty && updatedContent.isNotEmpty) {
+                  final Todo updatedTodo = Todo(
+                    id: todo.id,
+                    title: updatedTitle,
+                    content: updatedContent,
+                    state: todo.state,
+                  );
+
+                  Provider.of<TodoProvider>(context, listen: false)
+                      .updateTodoById(todo.id!, updatedTodo)
+                      .then((_) {
+                    Provider.of<TodoProvider>(context, listen: true)
+                        .fetchTodos();
+                  }).catchError((error) {
+                    // 顯示錯誤提示
+                  });
+                }
                 Navigator.of(context).pop();
               },
             ),

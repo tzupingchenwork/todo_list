@@ -79,4 +79,22 @@ class TodoProvider with ChangeNotifier {
       throw Exception('Failed to delete todo');
     }
   }
+
+  Future<void> updateTodoById(String id, Todo todo) async {
+    inspect(todo);
+    final response = await http.patch(
+      Uri.parse('http://localhost:3000/todos/$id'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(todo.toJson()),
+    );
+    bool isOk(int statusCode) => 200 <= statusCode && statusCode < 300;
+    if (isOk(response.statusCode)) {
+      _todos[_todos.indexWhere((todo) => todo.id == id)] = todo;
+      notifyListeners();
+    } else {
+      throw Exception('Failed to update todo');
+    }
+  }
 }
