@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../todo/todo_item.dart'; // 導入我們剛剛建立的模型
+import 'package:provider/provider.dart';
+import 'package:todo_list/mods/todo/todo_provider.dart';
 
-void main() {
-  runApp(const Todo());
-}
-
-class Todo extends StatelessWidget {
-  const Todo({super.key});
+class TodoPage extends StatelessWidget {
+  const TodoPage({super.key});
 
   // This widget is the root of your application.
   @override
@@ -18,32 +15,18 @@ class Todo extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const TodoListScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class TodoListScreen extends StatefulWidget {
+  const TodoListScreen({super.key});
   @override
-  MyHomePageState createState() => MyHomePageState();
+  TodoListState createState() => TodoListState();
 }
 
-class MyHomePageState extends State<MyHomePage> {
-  List<TodoItem> items = [];
-
-  void _addTodoItem() {
-    setState(() {
-      items.add(TodoItem(title: 'New Todo Item ${items.length + 1}'));
-    });
-  }
-
-  void _deleteTodoItem(int index) {
-    setState(() {
-      items.removeAt(index);
-    });
-  }
-
+class TodoListState extends State<TodoListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +53,7 @@ class MyHomePageState extends State<MyHomePage> {
               leading: const Icon(Icons.home),
               title: const Text('Cat'),
               onTap: () {
-                context.go('/');
+                context.go('/cat');
               },
             ),
             ListTile(
@@ -83,33 +66,94 @@ class MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return ListTile(
-            title: Text(item.title),
-            leading: Checkbox(
-              value: item.isDone,
-              onChanged: (bool? newValue) {
-                setState(() {
-                  item.isDone = newValue!;
-                });
-              },
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                _deleteTodoItem(index);
-              },
-            ),
+      body: Consumer<TodoProvider>(
+        builder: (context, provider, child) {
+          // 檢查是否有數據
+          if (provider.todos.isEmpty) {
+            return const Center(child: Text('開始建立代辦事項!'));
+          }
+
+          return ListView.builder(
+            itemCount: provider.todos.length,
+            itemBuilder: (context, index) {
+              final todo = provider.todos[index];
+              return ListTile(
+                title: Text(todo.title),
+                subtitle: Text(todo.content),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    // 這裡添加刪除Todo的邏輯
+                  },
+                ),
+              );
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addTodoItem,
+        onPressed: () => _showAddTodoDialog(context),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showAddTodoDialog(BuildContext context) {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController contentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Todo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(labelText: 'Content'),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () {
+                final String title = titleController.text;
+                final String content = contentController.text;
+                if (title.isNotEmpty && content.isNotEmpty) {
+                  final Todo newTodo = Todo(
+                    title: title,
+                    content: content,
+                    state: 'Pending',
+                  );
+
+                  Provider.of<TodoProvider>(context, listen: false)
+                      .addTodo(newTodo)
+                      .then((_) {
+                    // 可以在這裡處理成功添加後的邏輯，例如顯示提示或更新界面
+                  }).catchError((error) {
+                    // 處理錯誤情況，例如顯示錯誤提示
+                  });
+                }
+
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -34,7 +34,7 @@ class Cat extends StatelessWidget {
                 leading: const Icon(Icons.home),
                 title: const Text('Cat'),
                 onTap: () {
-                  context.go('/');
+                  context.go('/cat');
                 },
               ),
               ListTile(
