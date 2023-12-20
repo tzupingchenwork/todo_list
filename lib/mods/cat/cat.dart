@@ -55,7 +55,7 @@ class Cat extends StatelessWidget {
 
 class ImageDisplayPage extends StatelessWidget {
   const ImageDisplayPage({Key? key}) : super(key: key);
-  final String imageUrl = 'http://localhost:3000/cat';
+  final String imageUrl = 'http://192.168.12.111:3000/cat';
 
   @override
   Widget build(BuildContext context) {

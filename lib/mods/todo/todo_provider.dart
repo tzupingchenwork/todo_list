@@ -37,7 +37,8 @@ class TodoProvider with ChangeNotifier {
   List<Todo> get todos => _todos;
 
   Future<void> fetchTodos() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/todos'));
+    final response =
+        await http.get(Uri.parse('http://192.168.12.111:3000/todos'));
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body) as List;
@@ -50,7 +51,7 @@ class TodoProvider with ChangeNotifier {
 
   Future<void> addTodo(Todo todo) async {
     final response = await http.post(
-      Uri.parse('http://localhost:3000/todos'),
+      Uri.parse('http://192.168.12.111:3000/todos'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -70,7 +71,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> deleteTodoById(String id) async {
     inspect(id);
     final response =
-        await http.delete(Uri.parse('http://localhost:3000/todos/$id'));
+        await http.delete(Uri.parse('http://192.168.12.111:3000/todos/$id'));
     bool isOk(int statusCode) => 200 <= statusCode && statusCode < 300;
     if (isOk(response.statusCode)) {
       _todos.removeWhere((todo) => todo.id == id);
@@ -83,7 +84,7 @@ class TodoProvider with ChangeNotifier {
   Future<void> updateTodoById(String id, Todo todo) async {
     inspect(todo);
     final response = await http.patch(
-      Uri.parse('http://localhost:3000/todos/$id'),
+      Uri.parse('http://192.168.12.111/todos/$id'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
